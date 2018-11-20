@@ -1,0 +1,7 @@
+# Dependencies for a feature complete installation
+# ------------------------------------------------
+
+setuptools
+subprocess
+pytest
+pep8
