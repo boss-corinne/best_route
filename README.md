@@ -29,9 +29,12 @@ python setup.py develop --user
 Usage
 -----
 You will need three input arguments:
-<network-filename>
-<origin>
-<destination>
+
+network-filename
+
+origin
+
+destination
 
 These should be used in a bash terminal as follows:
 ```bash
