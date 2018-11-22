@@ -3,9 +3,11 @@ best_route
 This is a python package which can be used as a command-line 
 tool to find the best route between two specified points.
 
+This is currently a WIP.  Don't judge.
+
 Installation
 ------------
-To install the package, clone or download it from this 
+To install the package; clone or download it from this 
 repository, enter the top level of the directory and 
 execute the following command:
 
@@ -14,7 +16,7 @@ pip install best_route
 ```
 or (if you don't have access to pip):
 ```bash
-python setup.py install
+python setup.py install --user
 ```
 
 To install for development purposes, again in the top level:
@@ -30,11 +32,9 @@ Usage
 -----
 You will need three input arguments:
 
-network-filename
-
-origin
-
-destination
+ - network-filename
+ - origin
+ - destination
 
 These should be used in a bash terminal as follows:
 ```bash
