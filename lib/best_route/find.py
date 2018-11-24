@@ -37,7 +37,7 @@ def read_network(network):
     return all_legs, all_nodes
 
 
-def find_closest_neighbour(nodes_and_distances, current_node, all_legs, unvisited, visited):
+def find_closest_neighbour(nodes_and_distances, current_node, all_legs, unvisited, visited, destination):
     dist_so_far = nodes_and_distances[current_node]
     print('current_node: {}'.format(current_node))
 
@@ -46,9 +46,11 @@ def find_closest_neighbour(nodes_and_distances, current_node, all_legs, unvisite
     for leg in all_legs:
         if leg.startNode == current_node and leg.endNode in unvisited:
             valid_legs.append(leg)
-        else:
-            # TODO: What does this imply?
-            pass
+
+    if len(valid_legs) < 1:
+            msg = "Looks like that's just not possible, sorry.  " \
+                  "Maybe try a different pair of nodes."
+            raise ValueError(msg)
 
     # Cycle through each leg and choose the closest one
     shortest_distance = np.inf
@@ -60,15 +62,54 @@ def find_closest_neighbour(nodes_and_distances, current_node, all_legs, unvisite
             next_node = best_leg.endNode
 
     nodes_and_distances[next_node] = shortest_distance
-
-    print(shortest_distance)
-    print(best_leg)
-    print(nodes_and_distances[next_node])
-
     unvisited.remove(current_node)
-    visited.append(current_node)
+    visited.add(current_node)
 
-    return next_node
+    if next_node == destination:
+        # TODO Add destination node to visited
+        route = visited
+    else:
+        current_node = next_node
+        route = find_closest_neighbour(nodes_and_distances, current_node, all_legs, unvisited)
+
+    return route
+
+
+
+
+# def find_closest_neighbour(nodes_and_distances, current_node, all_legs, unvisited, visited):
+#     # XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+    # dist_so_far = nodes_and_distances[current_node]
+    # print('current_node: {}'.format(current_node))
+    #
+    # # Get a set of neighbours of this node:
+    # valid_legs = []
+    # for leg in all_legs:
+    #     if leg.startNode == current_node and leg.endNode in unvisited:
+    #         valid_legs.append(leg)
+    #     else:
+    #         # TODO: What does this imply?
+    #         pass
+    #
+    # # Cycle through each leg and choose the closest one
+    # shortest_distance = np.inf
+    # for leg in valid_legs:
+    #     this_distance = dist_so_far + leg.distance
+    #     if (this_distance) < shortest_distance:
+    #         best_leg = leg
+    #         shortest_distance = this_distance
+    #         next_node = best_leg.endNode
+    #
+    # nodes_and_distances[next_node] = shortest_distance
+    #
+    # print(shortest_distance)
+    # print(best_leg)
+    # print(nodes_and_distances[next_node])
+    #
+    # unvisited.remove(current_node)
+    # visited.append(current_node)
+    #
+    # return next_node
 
 
 def main():
@@ -102,7 +143,7 @@ def main():
     # Set distance from startpoint as zero
     dist_to_finish[current] = 0
 
-    find_closest_neighbour(dist_to_finish, current, all_legs, unvisited_nodes, visited_nodes)
+    find_closest_neighbour(dist_to_finish, current, all_legs, unvisited_nodes, visited_nodes, args.destination)
 
     # route_nodes = find_best_route(parser.filename, parser.origin, parser.destination)
     # print(route_nodes)
