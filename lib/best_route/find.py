@@ -37,21 +37,38 @@ def read_network(network):
     return all_legs, all_nodes
 
 
-def find_closest_neighbour(current_node, all_legs):
-    shortest_dist = np.inf
+def find_closest_neighbour(nodes_and_distances, current_node, all_legs, unvisited, visited):
+    dist_so_far = nodes_and_distances[current_node]
     print('current_node: {}'.format(current_node))
-    # print('all_legs: {}'.format(all_legs))
 
-    relevant_legs = []
+    # Get a set of neighbours of this node:
+    valid_legs = []
     for leg in all_legs:
-        print('this leg: {}, {}, {}'.format(leg.startNode, leg.endNode, leg.distance))
-        # print('leg start node: {}'.format(leg.startNode))
-        if leg.startNode == current_node:
-            relevant_legs.append(leg)
+        if leg.startNode == current_node and leg.endNode in unvisited:
+            valid_legs.append(leg)
+        else:
+            # TODO: What does this imply?
+            pass
 
-    # relevant_legs = [leg for leg in all_legs if leg.startNode==current_node]
+    # Cycle through each leg and choose the closest one
+    shortest_distance = np.inf
+    for leg in valid_legs:
+        this_distance = dist_so_far + leg.distance
+        if (this_distance) < shortest_distance:
+            best_leg = leg
+            shortest_distance = this_distance
+            next_node = best_leg.endNode
 
-    print(relevant_legs)
+    nodes_and_distances[next_node] = shortest_distance
+
+    print(shortest_distance)
+    print(best_leg)
+    print(nodes_and_distances[next_node])
+
+    unvisited.remove(current_node)
+    visited.append(current_node)
+
+    return next_node
 
 
 def main():
@@ -79,13 +96,13 @@ def main():
 
     unvisited_nodes = set(all_nodes)
     visited_nodes = set()
-    dist_to_finish = {node: 'inf' for node in unvisited_nodes}
+    dist_to_finish = {node: np.inf for node in unvisited_nodes}
     current = args.origin
 
     # Set distance from startpoint as zero
     dist_to_finish[current] = 0
 
-    find_closest_neighbour(current, all_legs)
+    find_closest_neighbour(dist_to_finish, current, all_legs, unvisited_nodes, visited_nodes)
 
     # route_nodes = find_best_route(parser.filename, parser.origin, parser.destination)
     # print(route_nodes)
