@@ -1,9 +1,9 @@
 best_route
 ==========
 This is a python package which can be used as a command-line 
-tool to find the best route between two specified points.
+tool to find the best route between two specified points, 
+following Dijkstra's algorithm: https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm.
 
-This is currently a WIP.  Don't judge.
 
 Installation
 ------------
