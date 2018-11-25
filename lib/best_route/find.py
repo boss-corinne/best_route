@@ -43,15 +43,7 @@ class network():
         self.dist_to_finish[self.origin] = 0
 
 
-    def find_closest_neighbour(self, current):
-        self.unvisited_nodes.remove(current)
-        self.visited_nodes.append(current)
-
-        dist_so_far = self.dist_to_finish[current]
-
-
-        # Get a set of neighbours of this node, or exit if a
-        # neighbour is the destination node:
+    def find_all_neighbours(self, current):
         valid_legs = []
         for leg in self.all_legs:
             if leg.startNode == current:
@@ -60,6 +52,20 @@ class network():
                     return self.visited_nodes
                 elif leg.endNode in self.unvisited_nodes:
                     valid_legs.append(leg)
+
+        return valid_legs
+
+    def find_best_route(self, current):
+        self.unvisited_nodes.remove(current)
+        self.visited_nodes.append(current)
+
+        dist_so_far = self.dist_to_finish[current]
+
+        # Get a set of neighbours of this node, or exit if a
+        # neighbour is the destination node:
+        valid_legs = self.find_all_neighbours(current)
+        if valid_legs is self.visited_nodes:
+            return self.visited_nodes
 
         # If there are no unvisited neighbours, try again from last good node
         if len(valid_legs) < 1:
@@ -73,7 +79,7 @@ class network():
                 self.unvisited_nodes.add(last_good_node)
 
                 # Try finding another route from the last good node
-                return self.find_closest_neighbour(last_good_node)
+                return self.find_best_route(last_good_node)
             except:
                 msg = "Can't find a viable route between {} and " \
                       "{}.  Please try different nodes or a " \
@@ -92,7 +98,7 @@ class network():
         self.dist_to_finish[next_node] = shortest_distance
 
         current_node = next_node
-        route = self.find_closest_neighbour(current_node)
+        route = self.find_best_route(current_node)
 
         return route
 
@@ -121,8 +127,9 @@ def main():
               'Please try a different node or network.'
         raise ValueError(msg)
 
-    route_nodes = route_map.find_closest_neighbour(args.origin)
-    print([node for node in route_nodes])
+    route_nodes = route_map.find_best_route(args.origin)
+    for node in route_nodes:
+        print(node,)
 
 
 if __name__ == '__main__':
