@@ -44,12 +44,11 @@ class network():
 
 
     def find_closest_neighbour(self, current):
-        if current != self.origin:
-            self.unvisited_nodes.remove(current)
-            self.visited_nodes.append(current)
+        self.unvisited_nodes.remove(current)
+        self.visited_nodes.append(current)
 
         dist_so_far = self.dist_to_finish[current]
-        print('current_node: {}'.format(current))
+
 
         # Get a set of neighbours of this node, or exit if a
         # neighbour is the destination node:
@@ -62,17 +61,26 @@ class network():
                 elif leg.endNode in self.unvisited_nodes:
                     valid_legs.append(leg)
 
+        # If there are no unvisited neighbours, try again from last good node
         if len(valid_legs) < 1:
+            last_good_node = self.visited_nodes[-2]
             try:
-                # Try again from beginning, missing all nodes tried so far:
-                return self.find_closest_neighbour(self.origin)
+                # remove bad node from the 'visited' list so it won't be added to the route
+                # also remove last good node so we can consider its options again
+                self.visited_nodes = self.visited_nodes[:-2]
+
+                # Move last good node into unvisited so we can reconsider it:
+                self.unvisited_nodes.add(last_good_node)
+
+                # Try finding another route from the last good node
+                return self.find_closest_neighbour(last_good_node)
             except:
-                msg = "Looks like that's just not possible, sorry.  " \
-                      "Maybe try a different pair of nodes."
+                msg = "Can't find a viable route between {} and " \
+                      "{}.  Please try different nodes or a " \
+                      "different network.".format(self.origin, self.destination)
                 raise ValueError(msg)
 
         # Cycle through each leg and choose the closest one
-        # TODO: Find a better tentative value for shortest_distance
         shortest_distance = np.inf
         for leg in valid_legs:
             this_distance = dist_so_far + leg.distance
