@@ -2,56 +2,100 @@
 Python module for finding the shortest route between two given locations
 
 """
-# TODO: Find algorithm for finding ther shortest distance between two points
-# TODO: Record source of algorithm in README
-# TODO: Get algorithm working locally according to test parameters (implement it)
 # TODO: Write some tests (from test cases supplied)
-# TODO: Update README instructions accordingly
-# TODO: Work out how to submit this entire package to github, and which repo to sumbit it to.
 
 import argparse
 import collections
+# from collections import OrderedList
 
 import numpy as np
 
 
-def read_network(network):
-    # all_legs is a list of named tuples (legs)
-    all_legs = []
-    # all_nodes is a list of every single start and end node
-    all_nodes = []
-    # leg is a named tuple with all info for each leg
-    leg = collections.namedtuple('leg', 'startNode endNode distance')
-    for line in open(network, 'r'):
-        start = line.split(' ')[0]
-        all_nodes.append(start)
+class network():
+    def __init__(self, network_args):
+        self.origin = network_args.origin
+        self.destination = network_args.destination
 
-        end = line.split(' ')[1]
-        all_nodes.append(end)
+        self.all_legs = []
+        self.all_nodes = []
 
-        dist = int(line.split(' ')[2])
-        newleg = leg(start, end, dist)
+        leg = collections.namedtuple('leg', 'startNode endNode distance')
+        for line in open(network_args.filename, 'r'):
+            start = line.split(' ')[0]
+            self.all_nodes.append(start)
 
-        all_legs.append(newleg)
+            end = line.split(' ')[1]
+            self.all_nodes.append(end)
 
-    return all_legs, all_nodes
+            dist = int(line.split(' ')[2])
+            newleg = leg(start, end, dist)
+
+            self.all_legs.append(newleg)
+
+        self.unvisited_nodes = set(self.all_nodes)
+        self.visited_nodes = []
+        self.dist_to_finish = {node: np.inf for node in self.unvisited_nodes}
+        self.dist_to_finish[self.origin] = 0
 
 
-def find_closest_neighbour(current_node, all_legs):
-    shortest_dist = np.inf
-    print('current_node: {}'.format(current_node))
-    # print('all_legs: {}'.format(all_legs))
+    def find_all_neighbours(self, current):
+        valid_legs = []
+        for leg in self.all_legs:
+            if leg.startNode == current:
+                if leg.endNode == self.destination:
+                    self.visited_nodes.append(leg.endNode)
+                    return self.visited_nodes
+                elif leg.endNode in self.unvisited_nodes:
+                    valid_legs.append(leg)
 
-    relevant_legs = []
-    for leg in all_legs:
-        print('this leg: {}, {}, {}'.format(leg.startNode, leg.endNode, leg.distance))
-        # print('leg start node: {}'.format(leg.startNode))
-        if leg.startNode == current_node:
-            relevant_legs.append(leg)
+        return valid_legs
 
-    # relevant_legs = [leg for leg in all_legs if leg.startNode==current_node]
+    def find_best_route(self, current):
+        self.unvisited_nodes.remove(current)
+        self.visited_nodes.append(current)
 
-    print(relevant_legs)
+        dist_so_far = self.dist_to_finish[current]
+
+        # Get a set of neighbours of this node, or exit if a
+        # neighbour is the destination node:
+        valid_legs = self.find_all_neighbours(current)
+        if valid_legs is self.visited_nodes:
+            return self.visited_nodes
+
+        # If there are no unvisited neighbours, try again from last good node
+        if len(valid_legs) < 1:
+            last_good_node = self.visited_nodes[-2]
+            try:
+                # remove bad node from the 'visited' list so it won't be added to the route
+                # also remove last good node so we can consider its options again
+                self.visited_nodes = self.visited_nodes[:-2]
+
+                # Move last good node into unvisited so we can reconsider it:
+                self.unvisited_nodes.add(last_good_node)
+
+                # Try finding another route from the last good node
+                return self.find_best_route(last_good_node)
+            except:
+                msg = "Can't find a viable route between {} and " \
+                      "{}.  Please try different nodes or a " \
+                      "different network.".format(self.origin, self.destination)
+                raise ValueError(msg)
+
+        # Cycle through each leg and choose the closest one
+        shortest_distance = np.inf
+        for leg in valid_legs:
+            this_distance = dist_so_far + leg.distance
+            if (this_distance) < shortest_distance:
+                best_leg = leg
+                shortest_distance = this_distance
+                next_node = best_leg.endNode
+
+        self.dist_to_finish[next_node] = shortest_distance
+
+        current_node = next_node
+        route = self.find_best_route(current_node)
+
+        return route
 
 
 def main():
@@ -66,34 +110,21 @@ def main():
 
     args = parser.parse_args()
 
-    # Create collections of nodes and legs and stuff
-    all_legs, all_nodes = read_network(args.filename)
-    if args.origin not in all_nodes:
+    # Create network object using input args:
+    route_map = network(args)
+
+    if args.origin not in route_map.all_nodes:
         msg = 'Your start node is not in your requested network.  ' \
               'Please try a different node or network.'
         raise ValueError(msg)
-    elif args.destination not in all_nodes:
+    elif args.destination not in route_map.all_nodes:
         msg = 'Your end node is not in your requested network.  ' \
               'Please try a different node or network.'
         raise ValueError(msg)
 
-    unvisited_nodes = set(all_nodes)
-    visited_nodes = set()
-    dist_to_finish = {node: 'inf' for node in unvisited_nodes}
-    current = args.origin
-
-    # Set distance from startpoint as zero
-    dist_to_finish[current] = 0
-
-    find_closest_neighbour(current, all_legs)
-
-    # route_nodes = find_best_route(parser.filename, parser.origin, parser.destination)
-    # print(route_nodes)
-
-    # else:
-    #     print("I'm afraid there has been a problem, please "
-    #           "use 'python env_browser.py --help' to check the arguments you "
-    #           "have given me.")
+    route_nodes = route_map.find_best_route(args.origin)
+    for node in route_nodes:
+        print(node,)
 
 
 if __name__ == '__main__':
